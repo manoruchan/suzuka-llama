@@ -230,6 +230,8 @@ def wait_for_server(url: str, process: subprocess.Popen, timeout: float = 60.0) 
 def cmd_list(args: argparse.Namespace) -> int:
     root = cache_root()
     print(f"Cache: {root}")
+    if args.detail:
+        print()
 
     if not root.is_dir():
         print("No cache directory.")
@@ -248,13 +250,16 @@ def cmd_list(args: argparse.Namespace) -> int:
 
     for repo, path in sorted(repos):
         info = latest_snapshot(path)
+        ctx = f"- {repo}" if not args.detail else repo
         if not info:
-            print(f"{repo}")
-            print("  No snapshot found.")
+            print(ctx)
+            if args.detail:
+                print("  No snapshot found.")
+                print()
             continue
 
         revision, snapshot = info
-        print(f"{repo}  ({revision[:12]})")
+        print(ctx + f"  ({revision[:12]})")
 
         if not args.detail:
             continue
@@ -267,10 +272,13 @@ def cmd_list(args: argparse.Namespace) -> int:
 
         if not model_files:
             print("  No GGUF model files found.")
+            print()
             continue
 
         for file in model_files:
             print(f"  {human_size(file.stat().st_size):>10}  {file.relative_to(snapshot)}")
+
+        print()
 
     return 0
 

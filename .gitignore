@@ -220,3 +220,4 @@ __marimo__/
 # Suzuka-llama
 /models/
 /suzuka-llama.py
+/.bin/

@@ -68,17 +68,36 @@ suzuka-llama --cache /home/suzuka/.cache/huggingface/hub list
 
 This keeps `suzuka-llama` from interfering with an existing llama.cpp or Hugging Face setup.
 
+## Commands
+
+```text
+suzuka-llama list
+suzuka-llama list --detail
+
+suzuka-llama info <user>/<model>
+suzuka-llama files <user>/<model>
+suzuka-llama path <user>/<model>
+suzuka-llama path <user>/<model> <file>
+
+suzuka-llama pull <user>/<model>
+suzuka-llama pull <user>/<model>/<file>
+
+suzuka-llama remove <user>/<model>
+
+suzuka-llama load <user>/<model> [file]
+suzuka-llama status
+suzuka-llama unload
+suzuka-llama call "your prompt"
+```
+
 ## Inspecting the cache
 
 A normal `list` shows one line per repository:
 
 ```text
 Cache: /home/suzuka/suzuka-llama/models
-- bartowski/Meta-Llama-3.1-8B-Instruct-GGUF  (bf5b95e96dac)
 - ggml-org/Qwen3.5-0.8B-GGUF  (8fea620810c4)
 - prism-ml/Ternary-Bonsai-2-27B-gguf  (6ed5e12bf84b)
-- unsloth/Qwen3.5-9B-GGUF  (3885219b6810)
-- unsloth/gemma-4-12b-it-GGUF
 - unsloth/gemma-4-E4B-it-GGUF  (bfc15c382204)
 ```
 
@@ -122,9 +141,7 @@ Output:
 To resolve the actual GGUF file:
 
 ```bash
-suzuka-llama path \
-    prism-ml/Ternary-Bonsai-2-27B-gguf \
-    Ternary-Bonsai-2-27B-PTQ1_0.gguf
+suzuka-llama path prism-ml/Ternary-Bonsai-2-27B-gguf Ternary-Bonsai-2-27B-PTQ1_0.gguf
 ```
 
 Output:
@@ -136,23 +153,14 @@ Output:
 The returned path can be passed directly to any llama.cpp build:
 
 ```bash
-llama-cli \
-    -m "$(suzuka-llama path \
-        prism-ml/Ternary-Bonsai-2-27B-gguf \
-        Ternary-Bonsai-2-27B-PTQ1_0.gguf)" \
-    -p "こんにちは！"
-```
+llama-cli -m "$(suzuka-llama path ggml-org/Qwen3.5-0.8B-GGUF Qwen3.5-0.8B-Q4_0.gguf)" -p "こんにちは！"
 
 `suzuka-llama` does not need to know which llama.cpp build you use.
 
 For example, a locally built llama.cpp fork can be used directly:
 
 ```bash
-~/prism-llama.cpp/build/bin/llama-cli \
-    -m "$(suzuka-llama path \
-        prism-ml/Ternary-Bonsai-2-27B-gguf \
-        Ternary-Bonsai-2-27B-PTQ1_0.gguf)" \
-    -p "こんにちは！"
+~/prism-llama.cpp/build/bin/llama-cli -m "$(suzuka-llama path prism-ml/Ternary-Bonsai-2-27B-gguf Ternary-Bonsai-2-27B-PTQ1_0.gguf)" -p "こんにちは！"
 ```
 
 ## Pulling models
@@ -166,9 +174,7 @@ suzuka-llama pull prism-ml/Ternary-Bonsai-2-27B-gguf
 Or download a specific file:
 
 ```bash
-suzuka-llama pull \
-    prism-ml/Ternary-Bonsai-2-27B-gguf \
-    Ternary-Bonsai-2-27B-PTQ1_0.gguf
+suzuka-llama pull prism-ml/Ternary-Bonsai-2-27B-gguf/Ternary-Bonsai-2-27B-PTQ1_0.gguf
 ```
 
 The download is performed through `llama-cli`, with the model cache directed to `suzuka-llama`'s cache.
@@ -196,9 +202,7 @@ This operation cannot be undone by `suzuka-llama`.
 `suzuka-llama` also provides a small optional wrapper around `llama-server`:
 
 ```bash
-suzuka-llama load \
-    unsloth/gemma-4-E4B-it-GGUF \
-    gemma-4-E4B-it-Q3_K_M.gguf
+suzuka-llama load unsloth/gemma-4-E4B-it-GGUF gemma-4-E4B-it-Q3_K_M.gguf
 
 suzuka-llama status
 
@@ -228,16 +232,16 @@ A simple model-testing workflow is:
 # 1. Find a GGUF on Hugging Face
 
 # 2. Pull it
-suzuka-llama pull <user>/<repo> <file>.gguf
+suzuka-llama pull <user>/<repo>/<file>
 
 # 3. Inspect the cache
 suzuka-llama list --detail
 
 # 4. Resolve the model path
-suzuka-llama path <user>/<repo> <file>.gguf
+suzuka-llama path <user>/<repo> <file>
 
 # 5. Run it with your own llama.cpp build
-llama-cli -m "$(suzuka-llama path <user>/<repo> <file>.gguf)"
+llama-cli -m "$(suzuka-llama path <user>/<repo> <file>)"
 ```
 
 The same cache can be used with any compatible llama.cpp build, including locally built forks.

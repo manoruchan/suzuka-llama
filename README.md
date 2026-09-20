@@ -187,7 +187,9 @@ Remove an entire cached repository:
 suzuka-llama remove prism-ml/Ternary-Bonsai-2-27B-gguf
 ```
 
-This removes the repository directory from the selected cache.
+**Warning:** `remove` deletes the entire cached repository, including all downloaded GGUF files and other files belonging to that repository. It does not currently support removing an individual file.
+
+This operation cannot be undone by `suzuka-llama`.
 
 ## Server workflow
 
@@ -212,6 +214,9 @@ The server state is stored outside the repository:
 ├── server.json
 └── llama-server.log
 ```
+
+llama-server.log contains the output of the current or most recent llama-server session.
+It is replaced when `load` starts a new server.
 
 This workflow is intentionally separate from the core model-management functionality.
 

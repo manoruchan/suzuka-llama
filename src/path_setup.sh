@@ -1,34 +1,24 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
+# usage: source ./path_setup.sh
 
-if [[ "$EUID" -eq 0 ]]; then
-    echo "Error: do not run this script with sudo or as root." >&2
-    exit 1
-fi
-
-LLAMA_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-
+LLAMA_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+COMMAND_DIR="$LLAMA_DIR/.bin"
 LLAMA_CACHE="$LLAMA_DIR/models"
-BASHRC="$HOME/.bashrc"
 
+mkdir -p "$COMMAND_DIR"
 mkdir -p "$LLAMA_CACHE"
 
-if ! grep -Fqx '# suzuka-llama' "$BASHRC"; then
-    {
-        echo
-        echo '# suzuka-llama'
-        echo "export LLAMA_CACHE=$LLAMA_CACHE"
-        echo 'source "$LLAMA_CACHE/../cmd_setup.sh"'
-    } >> "$BASHRC"
-else
-    echo "Warning: existing suzuka-llama configuration found in $BASHRC." >&2
-    echo "         Please check LLAMA_CACHE manually if this repository was moved." >&2
-fi
+ln -sfn "$LLAMA_DIR/suzuka-llama.py" "$COMMAND_DIR/suzuka-llama"
 
-echo "Configured llama.cpp:"
-echo "  LLAMA_CACHE=$LLAMA_CACHE"
-echo
+case ":$PATH:" in
+    *":$COMMAND_DIR:"*)
+        ;;
+    *)
+        export PATH="$COMMAND_DIR:$PATH"
+        ;;
+esac
 
-echo "Run:"
-echo "  source ~/.bashrc"
+echo "suzuka-llama command enabled for this shell."
+echo "  Command: $COMMAND_DIR/suzuka-llama"
+echo "  Cache:   $LLAMA_CACHE"

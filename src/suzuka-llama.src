@@ -5,6 +5,10 @@ suzuka-llama - simple llama CLI
 A small, intentionally boring controller for llama.cpp's HF cache
 and llama-server.
 
+By default, suzuka-llama uses its own local cache and does not modify
+the caller's LLAMA_CACHE environment. Use --cache to inspect or use
+an existing llama.cpp cache explicitly.
+
 Examples:
 suzuka-llama list
 suzuka-llama info ggml-org/gemma-4-E4B-it-GGUF
@@ -31,15 +35,18 @@ import urllib.request
 from pathlib import Path
 
 
-DEFAULT_CACHE = Path.home() / ".cache" / "llama.cpp" / "models"
+DEFAULT_CACHE = Path(__file__).resolve().parent / "models"
 STATE_DIR = Path.home() / ".local" / "state" / "suzuka-llama"
+CACHE_OVERRIDE: Path | None = None
 STATE_FILE = STATE_DIR / "server.json"
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 8080
 
 
 def cache_root() -> Path:
-    return Path(os.environ.get("LLAMA_CACHE", DEFAULT_CACHE)).expanduser()
+    if CACHE_OVERRIDE is not None:
+        return CACHE_OVERRIDE.expanduser()
+    return DEFAULT_CACHE
 
 
 def repo_dir(repo: str) -> Path:
@@ -342,9 +349,13 @@ def cmd_pull(args: argparse.Namespace) -> int:
     print("+", " ".join(command))
     print("Note: llama-cli downloads and then exits.")
 
+    env = os.environ.copy()
+    env["LLAMA_CACHE"] = str(cache_root())
+
     process = subprocess.Popen(
         command,
         stdin=subprocess.PIPE,
+        env=env,
     )
 
     process.communicate(b"/exit\n")
@@ -628,7 +639,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--cache",
         type=Path,
-        help="override cache root (default: $LLAMA_CACHE or ~/.cache/llama.cpp/models)",
+        help="override cache root (default: <repository>/models)",
     )
 
     sub = parser.add_subparsers(dest="command", required=True)
@@ -688,8 +699,9 @@ def main() -> int:
     parser = build_parser()
     args = parser.parse_args()
 
+    global CACHE_OVERRIDE
     if args.cache:
-        os.environ["LLAMA_CACHE"] = str(args.cache.expanduser())
+        CACHE_OVERRIDE = args.cache.expanduser()
 
     try:
         return args.func(args)

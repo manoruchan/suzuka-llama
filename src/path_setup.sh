@@ -2,23 +2,23 @@
 
 # usage: source ./path_setup.sh
 
-LLAMA_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
-COMMAND_DIR="$LLAMA_DIR/.bin"
-LLAMA_CACHE="$LLAMA_DIR/models"
+SUZUKA_LLAMA_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+SUZUKA_LLAMA_COMMAND_DIR="$SUZUKA_LLAMA_DIR/.bin"
+SUZUKA_LLAMA_CACHE="$SUZUKA_LLAMA_DIR/models"
 
-mkdir -p "$COMMAND_DIR"
-mkdir -p "$LLAMA_CACHE"
+mkdir -p "$SUZUKA_LLAMA_COMMAND_DIR"
+mkdir -p "$SUZUKA_LLAMA_CACHE"
 
-ln -sfn "$LLAMA_DIR/suzuka-llama.py" "$COMMAND_DIR/suzuka-llama"
+ln -sfn "$SUZUKA_LLAMA_DIR/suzuka-llama.py" "$SUZUKA_LLAMA_COMMAND_DIR/suzuka-llama"
 
 case ":$PATH:" in
-    *":$COMMAND_DIR:"*)
+    *":$SUZUKA_LLAMA_COMMAND_DIR:"*)
         ;;
     *)
-        export PATH="$COMMAND_DIR:$PATH"
+        export PATH="$SUZUKA_LLAMA_COMMAND_DIR:$PATH"
         ;;
 esac
 
 echo "suzuka-llama command enabled for this shell."
-echo "  Command: $COMMAND_DIR/suzuka-llama"
-echo "  Cache:   $LLAMA_CACHE"
+echo "  Command: $SUZUKA_LLAMA_COMMAND_DIR/suzuka-llama"
+echo "  Cache:   $SUZUKA_LLAMA_CACHE"

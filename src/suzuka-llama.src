@@ -256,6 +256,9 @@ def cmd_list(args: argparse.Namespace) -> int:
         revision, snapshot = info
         print(f"{repo}  ({revision[:12]})")
 
+        if not args.detail:
+            continue
+
         model_files = [
             file
             for file in snapshot_files(snapshot)
@@ -331,7 +334,10 @@ def cmd_files(args: argparse.Namespace) -> int:
 
 
 def cmd_path(args: argparse.Namespace) -> int:
-    print(repo_dir(args.repo))
+    if args.file is None:
+        print(repo_dir(args.repo))
+    else:
+        print(cached_model_file(args.repo, args.file))
     return 0
 
 
@@ -645,6 +651,7 @@ def build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", required=True)
 
     command = sub.add_parser("list", help="list cached repositories")
+    command.add_argument("--detail", action="store_true", help="show cached GGUF files")
     command.set_defaults(func=cmd_list)
 
     command = sub.add_parser("info", help="show repository information")
@@ -655,8 +662,9 @@ def build_parser() -> argparse.ArgumentParser:
     command.add_argument("repo")
     command.set_defaults(func=cmd_files)
 
-    command = sub.add_parser("path", help="print repository cache path")
+    command = sub.add_parser("path", help="print repository or model file path")
     command.add_argument("repo")
+    command.add_argument("file", nargs="?")
     command.set_defaults(func=cmd_path)
 
     command = sub.add_parser("pull", help="download a model from Hugging Face")

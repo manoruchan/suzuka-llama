@@ -2,8 +2,7 @@
 """
 suzuka-llama - simple llama CLI
 
-A small, intentionally boring controller for llama.cpp's HF cache
-and llama-server.
+A small, intentionally boring GGUF manager for llama.cpp.
 
 By default, suzuka-llama uses its own local cache and does not modify
 the caller's LLAMA_CACHE environment. Use --cache to inspect or use

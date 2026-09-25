@@ -85,8 +85,7 @@ suzuka-llama files <user>/<model>
 suzuka-llama path <user>/<model>
 suzuka-llama path <user>/<model> <file>
 
-suzuka-llama pull <user>/<model>
-suzuka-llama pull <user>/<model>/<file>
+suzuka-llama pull <user>/<model>[:<quantize>]
 
 suzuka-llama remove <user>/<model>
 
@@ -178,10 +177,10 @@ Download a GGUF repository from Hugging Face:
 suzuka-llama pull prism-ml/Ternary-Bonsai-2-27B-gguf
 ```
 
-Or download a specific file:
+Or download a specific quantize:
 
 ```bash
-suzuka-llama pull prism-ml/Ternary-Bonsai-2-27B-gguf/Ternary-Bonsai-2-27B-PTQ1_0.gguf
+suzuka-llama pull prism-ml/Ternary-Bonsai-2-27B-gguf:TQ1_0
 ```
 
 The download is performed through `llama-cli`, with the model cache directed to `suzuka-llama`'s cache.
@@ -239,7 +238,7 @@ A simple model-testing workflow is:
 # 1. Find a GGUF on Hugging Face
 
 # 2. Pull it
-suzuka-llama pull <user>/<model>/<file>
+suzuka-llama pull <user>/<model>:<quantize>
 
 # 3. Inspect the cache
 suzuka-llama list --detail

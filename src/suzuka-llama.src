@@ -55,24 +55,6 @@ def repo_dir(repo: str) -> Path:
     org, model = repo.split("/", 1)
     return cache_root() / f"models--{org}--{model}"
 
-
-def parse_hf_target(target: str) -> tuple[str, str | None]:
-    """
-    Accept either:
-      user/model
-      user/model/file.gguf
-
-    The first two path components identify the HF repository.
-    Everything after that is the file path.
-    """
-    parts = [p for p in target.strip("/").split("/") if p]
-    if len(parts) < 2:
-        raise ValueError("expected <user>/<model> or <user>/<model>/<file>")
-    repo = "/".join(parts[:2])
-    file = "/".join(parts[2:]) if len(parts) > 2 else None
-    return repo, file
-
-
 def repo_from_dir(path: Path) -> str | None:
     name = path.name
     if not name.startswith("models--"):
@@ -350,12 +332,12 @@ def cmd_path(args: argparse.Namespace) -> int:
 
 
 def cmd_pull(args: argparse.Namespace) -> int:
-    repo, filename = parse_hf_target(args.target)
+    command = ["llama-cli", "-no-cnv"]
 
-    command = ["llama-cli", "--hf-repo", repo]
-
-    if filename:
-        command += ["--hf-file", filename]
+    if ":" in args.target:
+        command += ["-hf", args.target]
+    else:
+        command += ["--hf-repo", args.target]
 
     if args.no_mmproj:
         command.append("--no-mmproj")
@@ -678,7 +660,7 @@ def build_parser() -> argparse.ArgumentParser:
     command.set_defaults(func=cmd_path)
 
     command = sub.add_parser("pull", help="download a model from Hugging Face")
-    command.add_argument("target", help="<user>/<model> or <user>/<model>/<file>")
+    command.add_argument("target", help="<user>/<model> or <user>/<model>:<file>")
     command.add_argument("--no-mmproj", action="store_true")
     command.set_defaults(func=cmd_pull)
 

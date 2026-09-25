@@ -65,6 +65,48 @@ def repo_from_dir(path: Path) -> str | None:
     org, model = rest.split("--", 1)
     return f"{org}/{model}"
 
+def get_cached_repositories() -> list[tuple[str, Path]]:
+    root = cache_root()
+
+    if not root.is_dir():
+        return []
+
+    repos = []
+
+    for path in root.iterdir():
+        if path.is_dir():
+            repo = repo_from_dir(path)
+            if repo:
+                repos.append((repo, path))
+
+    return sorted(repos)
+
+
+def find_cached_file(filename: str) -> Path:
+    matches = []
+
+    for _, repo_path in get_cached_repositories():
+        info = latest_snapshot(repo_path)
+        if not info:
+            continue
+
+        _, snapshot = info
+
+        for file in snapshot_files(snapshot):
+            if file.name == filename:
+                matches.append(file)
+
+    if not matches:
+        raise FileNotFoundError(f"file is not cached: {filename}")
+
+    if len(matches) > 1:
+        raise RuntimeError(
+            f"multiple cached files found for {filename}; "
+            "use <user>/<model> <file>"
+        )
+
+    return matches[0]
+
 
 def latest_snapshot(repo_path: Path) -> tuple[str, Path] | None:
     refs = repo_path / "refs"
@@ -212,19 +254,11 @@ def wait_for_server(url: str, process: subprocess.Popen, timeout: float = 60.0) 
 def cmd_list(args: argparse.Namespace) -> int:
     root = cache_root()
     print(f"Cache: {root}")
+
     if args.detail:
         print()
 
-    if not root.is_dir():
-        print("No cache directory.")
-        return 0
-
-    repos = []
-    for path in root.iterdir():
-        if path.is_dir():
-            repo = repo_from_dir(path)
-            if repo:
-                repos.append((repo, path))
+    repos = get_cached_repositories()
 
     if not repos:
         print("No cached repositories.")
@@ -324,10 +358,10 @@ def cmd_files(args: argparse.Namespace) -> int:
 
 
 def cmd_path(args: argparse.Namespace) -> int:
-    if args.file is None:
-        print(repo_dir(args.repo))
-    else:
+    if args.repo:
         print(cached_model_file(args.repo, args.file))
+    else:
+        print(find_cached_file(args.file))
     return 0
 
 
@@ -654,13 +688,13 @@ def build_parser() -> argparse.ArgumentParser:
     command.add_argument("repo")
     command.set_defaults(func=cmd_files)
 
-    command = sub.add_parser("path", help="print repository or model file path")
-    command.add_argument("repo")
-    command.add_argument("file", nargs="?")
+    command = sub.add_parser("path", help="resolve a cached model file path")
+    command.add_argument("file")
+    command.add_argument("--repo", help="<user>/<model>")
     command.set_defaults(func=cmd_path)
 
     command = sub.add_parser("pull", help="download a model from Hugging Face")
-    command.add_argument("target", help="<user>/<model> or <user>/<model>:<file>")
+    command.add_argument("target", help="<user>/<model> or <user>/<model>:<quantize>")
     command.add_argument("--no-mmproj", action="store_true")
     command.set_defaults(func=cmd_pull)
 

@@ -82,8 +82,8 @@ suzuka-llama list --detail
 
 suzuka-llama info <user>/<model>
 suzuka-llama files <user>/<model>
-suzuka-llama path <user>/<model>
-suzuka-llama path <user>/<model> <file>
+suzuka-llama path <file>
+suzuka-llama path <file> --repo <user>/<model>
 
 suzuka-llama pull <user>/<model>[:<quantize>]
 
@@ -113,7 +113,6 @@ Cache: /home/suzuka/suzuka-llama/models
 
 prism-ml/Ternary-Bonsai-2-27B-gguf  (6ed5e12bf84b)
      5.5 GiB  Ternary-Bonsai-2-27B-PTQ1_0.gguf
-   600.1 MiB  Ternary-Bonsai-2-27B-mmproj-Q8_0.gguf
 ```
 
 `files` can also be used to inspect the files in a specific repository:
@@ -131,22 +130,12 @@ Output:
 
 ## Resolving model paths
 
-`path` can print either the repository cache directory or the path to a specific GGUF file.
+`path` resolves a cached GGUF file to its actual path.
+
+When the filename is unique across the cache, the repository does not need to be specified:
 
 ```bash
-suzuka-llama path prism-ml/Ternary-Bonsai-2-27B-gguf
-```
-
-Output:
-
-```text
-/home/suzuka/suzuka-llama/models/models--prism-ml--Ternary-Bonsai-2-27B-gguf
-```
-
-To resolve the actual GGUF file:
-
-```bash
-suzuka-llama path prism-ml/Ternary-Bonsai-2-27B-gguf Ternary-Bonsai-2-27B-PTQ1_0.gguf
+suzuka-llama path Ternary-Bonsai-2-27B-PTQ1_0.gguf
 ```
 
 Output:
@@ -155,10 +144,16 @@ Output:
 /home/suzuka/suzuka-llama/models/models--prism-ml--Ternary-Bonsai-2-27B-gguf/snapshots/6ed5e12bf84b7a63069882c91dd9e9218647d17b/Ternary-Bonsai-2-27B-PTQ1_0.gguf
 ```
 
+If the same filename exists in multiple repositories, specify the repository explicitly:
+
+```bash
+suzuka-llama path Ternary-Bonsai-2-27B-PTQ1_0.gguf --repo prism-ml/Ternary-Bonsai-2-27B-gguf
+```
+
 The returned path can be passed directly to any llama.cpp build:
 
 ```bash
-llama-cli -m "$(suzuka-llama path ggml-org/Qwen3.5-0.8B-GGUF Qwen3.5-0.8B-Q4_0.gguf)" -p "こんにちは！"
+llama-cli -m "$(suzuka-llama path Qwen3.5-0.8B-Q4_0.gguf)" -p "こんにちは！"
 ```
 
 `suzuka-llama` does not need to know which llama.cpp build you use.
@@ -166,7 +161,7 @@ llama-cli -m "$(suzuka-llama path ggml-org/Qwen3.5-0.8B-GGUF Qwen3.5-0.8B-Q4_0.g
 For example, a locally built llama.cpp fork can be used directly:
 
 ```bash
-~/prism-llama.cpp/build/bin/llama-cli -m "$(suzuka-llama path prism-ml/Ternary-Bonsai-2-27B-gguf Ternary-Bonsai-2-27B-PTQ1_0.gguf)" -p "こんにちは！"
+~/prism-llama.cpp/build/bin/llama-cli -m "$(suzuka-llama path Ternary-Bonsai-2-27B-PTQ1_0.gguf)" -p "こんにちは！"
 ```
 
 ## Pulling models
@@ -244,10 +239,10 @@ suzuka-llama pull <user>/<model>:<quantize>
 suzuka-llama list --detail
 
 # 4. Resolve the model path
-suzuka-llama path <user>/<model> <file>
+suzuka-llama path <file>
 
 # 5. Run it with your own llama.cpp build
-llama-cli -m "$(suzuka-llama path <user>/<model> <file>)"
+llama-cli -m "$(suzuka-llama path <file>)"
 ```
 
 The same cache can be used with any compatible llama.cpp build, including locally built forks.

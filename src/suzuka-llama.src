@@ -365,7 +365,7 @@ def cmd_path(args: argparse.Namespace) -> int:
 
 
 def cmd_pull(args: argparse.Namespace) -> int:
-    command = ["llama-cli", "-no-cnv"]
+    command = ["llama-cli"]
 
     if ":" in args.target:
         command += ["-hf", args.target]
